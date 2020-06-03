@@ -1,0 +1,753 @@
+
+Java was dying :
+
+ Java Technology never dies
+ but 
+ Java Programming language dies
+   But how to save from death.
+
+Groovy is one the jvm language.
+
+Java is Object Oriented Programming language.
+   
+
+Problems with legacy models
+
+Requirements
+
+Write code faster
+Quality
+Write less
+ ->you can avoid bugs
+Commonality
+Scalability - add / remove
+The code that is easier to reason about
+Readability
+ Human readable, not only programmer centric.
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+Coding : 
+
+
+ programming language -----follows paradigm-->
+
+   ->Produral Programming Paradigm
+   ->Object Oriented Paradigm
+   ->Functional Programming paradigm
+   -->Event Driven
+   ->Message Oriented Programming Paradigm
+   ->Reactive Programming Paradigm
+   
+
+Java Programming language follows which paradigm?
+  -was designed with Object Oriented Programming.
+ 
+Functional Programming
+
+Java 8 on wards
+  Java is Object oriented , functional style programming language.
+
+Hybird Paradigm languages
+  javascript,java
+///////////////////////////////////////////////////////////////////////////////////////////
+
+In object oriented systems, we built objects, which communicates each other ,exchange data
+we use object composition, we pass objects in and around systems....
+
+                    Resilience4J Programming Architecture Birds View
+                      ...............................................
+
+			        Resilience4J
+                                   |
+                             Fault ManageMent lib			
+				   |
+                    --------------------------------------------------------------
+			|             |        |           |       |          |	
+		   Circuit Breaker  BulkHead Rate Limiter Retry  Time Limiter Cache
+					 |
+				       Coding - Your old style----|(oo)
+			------------------------------------------
+			|                                        |
+                       JAVA 8 Functional style  <----       Annotation Style
+				|				|
+			      ------------------------------------
+					      |
+				     Reactive + Non Blocking	                               					      |
+				  Spring Cloud + Spring Boot
+
+
+ Fault Managment ---->functional style, in Reactive manner, and in non blocking.
+
+
+.........................................................................................
+
+Session flows : functional style,reactive ,non blocking---->Resilence.
+
+
+Object Oriented Concepts:
+........................
+
+1.Abstraction
+2.Enscapulation -Providing Code Security to protect to share code across the application
+    code - collection of classes - collection of variables and methods....
+  logically we call class
+  physically  -  folders and files -com/ibm/Hello.java - Welcome.java
+														Welcome file can access Hello.java file---Welcome code can access Hello
+
+3.Hierachy
+4.Typing
+5.Modularity
+----------------------
+6.Concurrency
+7.Persistency 
+
+Functional Programming :
+
+History of functional Programming
+.................................
+
+Application stores data. data is subject to change-changes are called "mutations".
+
+How to change state(data)?
+
+state is stored in main memory. changes means you change/update memory location
+
+In 1930,The scientist called "Alan Turing" : Turing Machine ->State Machine
+
+State Machine: 
+  It is mathmetical abstraction of "How to store state in memory and maniuplate that memory".
+
+ eg 
+  int a =10; ----> a's memory address--->1024 and 10 
+
+ state mutations:
+   a++ -> 11-------what is memory address of 11? 1024.
+
+After, 1970 - Concurrency--multiprocess -- multi threading
+
+multi state mutation will lead
+1.data coruption.
+   ->Mutx - Lock
+  
+Lock will lead another problems
+  -Blocking
+  -what if thread takes more time--->waiting--performance
+  -Thread dead locking
+
+Time Travel;
+...........
+
+what if i want to track /record , my state changes
+ 
+  Recorder ------------------------history of state changes.
+   |
+a =10--->a11 ---a--12
+
+
+Solution to Turning Machine:
+.............................
+
+Lambda Calculs:
+  It is another mathmetical approach like state machine to represent state in memory and mutate it.
+
+Lambda Calculs invented by The "Alonzo Church" , Who is PHD student of "Alan Turning"..
+
+The Programming languages which implements "lambda calculs theroy" called "Functional programming".
+
+Lambda express the programs construction through "functions" -->f()
+
+********************************************************************************************
+The languages which implements lambda calcus
+ ->Scheme
+ ->haskell
+.............................
+
+With Respect hybrid languages
+ java- Object oriented, functional style.
+
+style vs pure:
+
+  if a pl implements 100% principles of an paradigm, those languages called "Pure"
+
+  if a pl implements not all principles or paritally, those languages called "style".
+
+...........................................................................................
+
+Functional Programming  Principles:
+ 
+  Function is abstraction to encapuslate application state and its logic
+
+1.Side Effects:
+  The application mutate some sort of state, may be outer world(out side to application boundary) - database calls,files.
+
+2.Referential Transparency:
+  Variables are once defined dnt change their value throughout the program
+  In fp, programs dont have assignment statements.
+  what if i want to change the variable, we should not mutate old memory address,
+     rather assign computed result into new memory address.
+  This eleminates any changes of side effects because any variable can be replaced with
+  its actual value at any point of execution.
+
+"Pure" function :
+
+Pure should be
+
+ 1. function takes arg, return the same , which never modifes the state.
+  
+      function  update(value){
+           return value;
+      }
+  
+ 2.  What if i want to change state
+
+   Thinking in values:
+             The value changes should not be in same place, rather than it should be in different memory address--->Immutablity -- Immutable values
+
+      function  update(value){
+           return value; //state changes
+      }
+
+
+ 100               104          240
+ |                  |           |
+ Value1---update-->Value2 ---->update
+
+
+
+3.Recurssion:
+   no loops in fp- only fp
+
+4.Function is first class citizen : every thing is function, function itself a value.
+
+  ->function as parameter---->Callback ---Async 
+  ->Funcition is returned --->closure
+  ->function compostion --> f()-->f()--f()=>result
+     ->curry
+     ->memoization
+     -Partial applications
+     -Lifting
+
+.............................................................................................
+
+Java and Functional programming
+
+Vavr
+
+Resilience 4j ===> java 8 functional style + vavr + objects
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+Lambda calcus implemenation:
+...........................
+
+inner classes:
+ 1.anonmous inner class --- functional implements.
+
+interfaces : functional interface
+
+functional interfaces:
+
+1.to implement lambda , java provides interface having single abstract method "SAM".
+
+Functional interfaces must have only one abstrct method  : SRP principle.
+
+2.interface can have other methods
+   -default methods
+   -static methods
+
+
+
+package com.example.demo;
+
+//before java 8
+
+import jdk.nashorn.internal.objects.annotations.Function;
+
+/**
+ * interface can hold only static variables + abstract methods
+ * provided methods with implementation
+ */
+
+//SAM : SINGLE Abstract methods :functional interface
+interface MyFunction {
+    void apply(); //abstract method
+
+    default void saySomething() {
+        System.out.println("Say something");
+    }
+
+    static void doSomething() {
+        System.out.println("Do somethig");
+    }
+}
+
+/**
+ * class myfunctionImpl implements MyFunction{
+ * apply
+ * saySomething
+ * doSomething
+ * }
+ * MyFunction func = new myfunctionImpl()
+ * func.apply
+ * func.saySomething
+ * MyFunction.doSomething
+ */
+
+//Interface contractor writes functional interfaces
+//certify this interface is 100% functional interface
+
+@FunctionalInterface
+interface MyFunction2 {
+    void consume();
+
+    default void saySomething() {
+        System.out.println("Say something");
+    }
+
+    static void doSomething() {
+        System.out.println("Do somethig");
+    }
+}
+
+
+public class AdvancedLambda {
+    public static void main(String[] args) {
+        MyFunction func = () -> {
+            System.out.println("My Function");
+        };
+        func.apply();
+        func.saySomething();
+        MyFunction.doSomething();
+
+        //when
+        MyFunction2 function2 = () -> {
+            System.out.println("consumer");
+        };
+        function2.consume();
+
+
+    }
+}
+
+
+
+After java 8 lot of built in interfaces , been converted into functional interface
+
+
+
+package com.example.demo;
+
+//before java 8
+
+
+/**
+ * interface can hold only static variables + abstract methods
+ * provided methods with implementation
+ */
+
+//SAM : SINGLE Abstract methods :functional interface
+interface MyFunction {
+    void apply(); //abstract method
+
+    default void saySomething() {
+        System.out.println("Say something");
+    }
+
+    static void doSomething() {
+        System.out.println("Do somethig");
+    }
+}
+
+/**
+ * class myfunctionImpl implements MyFunction{
+ * apply
+ * saySomething
+ * doSomething
+ * }
+ * MyFunction func = new myfunctionImpl()
+ * func.apply
+ * func.saySomething
+ * MyFunction.doSomething
+ */
+
+//Interface contractor writes functional interfaces
+//certify this interface is 100% functional interface
+
+@FunctionalInterface
+interface MyFunction2 {
+    void consume();
+
+    default void saySomething() {
+        System.out.println("Say something");
+    }
+
+    static void doSomething() {
+        System.out.println("Do somethig");
+    }
+}
+
+
+public class AdvancedLambda {
+    public static void main(String[] args) {
+        MyFunction func = () -> {
+            System.out.println("My Function");
+        };
+        func.apply();
+        func.saySomething();
+        MyFunction.doSomething();
+
+        //when
+        MyFunction2 function2 = () -> {
+            System.out.println("consumer");
+        };
+        function2.consume();
+
+        //create threads using lambda
+        Thread t1 = null;
+
+        //old style :
+        t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName());
+            }
+        });
+        t1.start();
+        //lambda
+        t1 = new Thread(() -> {
+            System.out.println(Thread.currentThread().getName());
+        });
+        t1.start();
+
+
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+How to pass args and parameters,return values
+
+package com.example.demo;
+
+@FunctionalInterface
+interface Single {
+    void setName(String name);
+}
+
+public class LambdaArgsParameters {
+    public static void main(String[] args) {
+        //Pass single parameter
+        Single single = null;
+        //pass single Variable
+        single = (String name) -> {
+            System.out.println(name);
+        };
+        single.setName("Subramanian");
+
+
+    }
+}
+
+
+How to refactor code?
+ How to write simpler code.
+
+Type inference : the type is implicitly understood.
+
+
+package com.example.demo;
+
+@FunctionalInterface
+interface Single {
+    void setName(String name);
+}
+
+public class LambdaArgsParameters {
+    public static void main(String[] args) {
+        //Pass single parameter
+        Single single = null;
+        //pass single Variable
+        single = (String name) -> {
+            System.out.println(name);
+            System.out.println("Single Interface");
+        };
+        single.setName("Subramanian");
+        //code Refactoring 1: if function body has one line of code: remove {}
+        single = (String name) -> System.out.println(name);
+        single.setName("Subramanian");
+        //code Refactoring 2: if function arg has variable with type
+        //       Type inference : the type is implicitly understood.
+        single = (name) -> System.out.println(name);
+        single.setName("Subramanian");
+        //code Refactoring 2: if function single arg has variable with type :drop ()
+        single = name -> System.out.println(name);
+        single.setName("Subramanian");
+
+    }
+}
+
+Args and params
+package com.example.demo;
+
+@FunctionalInterface
+interface Single {
+    void setName(String name);
+}
+
+//Two or more parameters
+@FunctionalInterface
+interface Concatation {
+    void concat(String firstName, String lastName);
+}
+
+//ReturnValues
+@FunctionalInterface
+interface Producer {
+    String produce();
+}
+
+@FunctionalInterface
+interface SupplyAndProduce {
+    String accept(String something);
+}
+
+@FunctionalInterface
+interface Calculator {
+    int calculate(int a, int b);
+}
+
+
+public class LambdaArgsParameters {
+
+    public static void main(String[] args) {
+        //Pass single parameter
+        Single single = null;
+        //pass single Variable
+        single = (String name) -> {
+            System.out.println(name);
+            System.out.println("Single Interface");
+        };
+        single.setName("Subramanian");
+        //code Refactoring 1: if function body has one line of code: remove {}
+        single = (String name) -> System.out.println(name);
+        single.setName("Subramanian");
+        //code Refactoring 2: if function arg has variable with type
+        //       Type inference : the type is implicitly understood.
+        single = (name) -> System.out.println(name);
+        single.setName("Subramanian");
+        //code Refactoring 3: if function single arg has variable with type :drop ()
+        single = name -> System.out.println(name);
+        single.setName("Subramanian");
+
+        //Two parameters
+        Concatation concatation = (firstName, lastName) -> System.out.println(firstName + lastName);
+        concatation.concat("Subramanian", "Murugan");
+
+        Producer producer = null;
+        producer = () -> {
+            return "SOmething has produced";
+        };
+        System.out.println(producer.produce());
+
+        //code Refactoring 1: if function body has only return statement, no more code: remove {} and return statement
+        producer = () -> "SOmething has produced";
+        System.out.println(producer.produce());
+
+        //take and return the same
+        SupplyAndProduce sp = something -> something;
+        System.out.println(sp.accept("something is taken and returned"));
+
+        Calculator calc = (a, b) -> {
+            int c = a + b;
+            return c;
+        };
+        System.out.println(calc.calculate(10, 20));
+
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+Function is first class citizen:
+  Function can be passed as parameter to another function.
+
+
+package com.example.demo;
+
+@FunctionalInterface
+interface Handler {
+    String handle(String connectioninfo);
+}
+//passing more functions as parameter
+
+@FunctionalInterface
+interface Resolve {
+    void resolve(Object data);
+}
+
+@FunctionalInterface
+interface Reject {
+    void reject(Object error);
+}
+
+@FunctionalInterface
+interface Validator {
+    void validate(Resolve resolve, Reject reject);
+}
+
+
+class HttpServer {
+
+    public void delay(long time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            System.out.println(e);
+        }
+    }
+
+    //server apis
+    public void start(Handler handler) {
+        //some dealy
+        System.out.println("Server is starting");
+        //  delay(5000);
+        System.out.println(handler.handle("Port : 8080 Host : ibmhost"));
+    }
+
+    public void stop(Handler handler) {
+        System.out.println("Server is stoping");
+        //   delay(2000);
+        System.out.println(handler.handle("Port : 8080 Host : ibmhost"));
+    }
+
+}
+
+
+public class FunctionAsArgAndParam {
+
+    public static void main(String[] args) {
+
+        HttpServer httpServer = null;
+
+        httpServer = new HttpServer();
+        //call start method : old style
+        httpServer.start(new Handler() {
+            @Override
+            public String handle(String connectioninfo) {
+                return "HTTP Server is up " + connectioninfo;
+            }
+        });
+        //passing lambda function
+        httpServer.start(connectioninfo -> {
+            return "Http Server up again " + connectioninfo;
+        });
+        //function as parameter
+        httpServer.start(connectioninfo -> "Http Server up again " + connectioninfo);
+
+        //stop method
+        httpServer.stop(connectioninfo -> "Http Server Stoped " + connectioninfo);
+
+        // Resolve resolve = () -> "SUCCESS";
+        // Reject reject = () -> "FAILED";
+
+
+        Validator validator = (res, rej) -> {
+            //  String fakeData = null;
+            String fakeData = "Subramanian";
+            if (fakeData != null) {
+                res.resolve(fakeData);
+            } else {
+                rej.reject("No User Found");
+            }
+        };
+        //validator.validate(resolve,reject);
+        validator.validate(response -> {
+            System.out.println(response);
+        }, err -> {
+            System.out.println(err);
+        });
+
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+How to acces instance and local variables inside lambda? : Variable Capture
+
+
+package com.example.demo;
+
+interface Variable {
+    void doIt();
+}
+
+public class VariableCaptureDemo {
+
+    //instance variable
+    private int counter;
+
+    public void increment() {
+        //Lambda will access the counter variable
+        Variable variable = () -> {
+            System.out.println(++counter);
+        };
+        variable.doIt();
+    }
+
+    public static void main(String[] args) {
+
+        VariableCaptureDemo inc = new VariableCaptureDemo();
+        for (int i = 0; i < 9; i++) {
+            inc.increment();
+        }
+        //local variable
+        String name = "Subramanian";
+        Variable variable = () -> {
+            //local variable inside lambda
+            System.out.println(name);
+        };
+        variable.doIt();
+
+        //Effective final : implictly final
+        // final int newCounter = 0;
+        int newCounter = 1;
+        Variable variable1 = () -> {
+            System.out.println(newCounter * 10);
+            System.out.println(newCounter + 1);
+        };
+        variable1.doIt();
+
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
