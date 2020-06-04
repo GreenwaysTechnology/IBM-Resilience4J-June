@@ -716,6 +716,776 @@ public class VariableCaptureDemo {
 
     }
 }
+//////////////////////////////////////////////////////////////////////////////////////////////
+Method References:
+..................
+
+Method References , how to access methods inside lambda in easy way
+ ::
+
+package com.ibm.functions;
+
+import java.util.Arrays;
+import java.util.List;
+
+//
+class Loop {
+    //target to thread
+    public static void loop() {
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Loop " + i);
+        }
+    }
+}
+
+@FunctionalInterface
+interface Welcome {
+    void printMessage(String message);
+}
+
+
+public class MethodReferencesDemo {
+
+    Thread thread;
+
+    //instance method holding thread logic
+    public void runMe() {
+        String threadName = "Loop Thread";
+        System.out.println(threadName);
+    }
+
+    public void startThread() {
+
+        //inline logic
+        thread = new Thread(() -> System.out.println("Thread Started"));
+        thread.start();
+        //method references ;refering function inside Caller
+        thread = new Thread(() -> runMe());
+        thread.start();
+        // instance method reference symbol ::
+        thread = new Thread(this::runMe);
+        thread.start();
+        //passing static method as reference
+        thread = new Thread(Loop::loop);
+        thread.start();
+
+
+    }
+
+
+    public static void main(String[] args) {
+
+        MethodReferencesDemo methodRef = new MethodReferencesDemo();
+        methodRef.startThread();
+
+        Welcome welcome = null;
+        welcome = message -> {
+            System.out.println(message);
+        };
+        welcome.printMessage("Hello");
+
+        welcome = message -> System.out.println(message);
+        welcome.printMessage("Hello");
+
+        //code refactoring using Method Reference
+        welcome = System.out::println;
+        welcome.printMessage("Hello Method Reference");
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        //List and Lambda with method Reference
+        List<String> list = Arrays.asList("Hello", "How are you", "Welcome to Functional Style Programming");
+        //functional style of iterating list
+        list.forEach(message -> System.out.println(message));
+        list.forEach(System.out::println);
+
+    }
+}
+**********************************************************************************************
+If i want to implement lambda , i need functional interface. 
+
+what if i dont to add my own interfaces for common tasks. lets say eg "take one variable and return the same".
+
+if i starts adding interfaces, application will have lot of interfaces.
+
+How to reduce that?
+ - java provides a package called "java.util.function", which provides lot of built in 
+interfaces to solve common task day to day.
+
+
+common interfaces
+
+1.Consumer
+2.Predicate
+3.Supplier
+4.UnaryOperator
+5.BinaryOperator
+6.Function
+
+             nothing-->T     Supplier
+             T--->nothing    Consumer
+             T-->T           UnaryOperator
+             T,T ->T         BinaryOperator
+             T--->boolean     Predicate
+
+Note: 
+ any interface starts with 'Bi" - two input
+
+Wrapper Classes 
+
+ Long
+ Double
+ Int
+
+
+package com.ibm.functions;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Supplier;
+
+class Employee {
+    private int id;
+    private String name;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Employee() {
+
+    }
+
+    public Employee(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
+}
+
+public class SupplierDemo {
+    public static void main(String[] args) {
+        Supplier supplier = null;
+        supplier = new Supplier() {
+            @Override
+            public Object get() {
+                return "Hello";
+            }
+        };
+        System.out.println(supplier.get());
+        supplier = () -> "Hello Supplier";
+        System.out.println(supplier.get());
+
+        //return object
+        Supplier<Employee> employeeSupplier = () -> new Employee(1, "Subramanian");
+
+        System.out.println(employeeSupplier.get().toString());
+
+        //Task create emp list , return via supplier and iterate
+
+        Supplier<List<Employee>> empList = () -> Arrays.asList(new Employee(1, "Subramanian"),
+                new Employee(2, "Ram"));
+
+        empList.get().forEach(System.out::println);
+        empList.get().forEach(emp -> System.out.println(emp.getId() + " " + emp.getName()));
+
+    }
+}
+
+package com.ibm.functions;
+
+import java.util.function.Predicate;
+
+class FitlerApi {
+
+    public boolean filter(int input) {
+        //conditions checking via if ..else lader : we can use functional style of condition
+        Predicate<Integer> condition = (value) -> value == 100;
+        return condition.test(input); // return boolean result ? can we grab the result through lambda
+    }
+
+}
+
+public class PredicateDemo {
+    public static void main(String[] args) {
+        Predicate<Integer> greaterThan = null;
+        greaterThan = new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer integer) {
+                return integer > 100; // should return always boolean
+            }
+        };
+        System.out.println(greaterThan.test(1000) ? "Passed" : "Failed");
+        greaterThan = value -> value > 1000;
+        System.out.println(greaterThan.test(1000) ? "Passed" : "Failed");
+
+        FitlerApi filterapi = new FitlerApi();
+        //System.out.println(filterapi.filter(100) ? "Passed" : "Failed");
+
+        //take the result with handlers:
+    }
+}
+///////////////////////////////////////////////////////////////////////////////////
+
+Binary Operator , Function
+
+Lets say, we want to pass : Consumer, we want to Return : Supplier, , Boolean : Predicate.
+
+Function is generic notation of all
+
+
+
+
+package com.ibm.functions;import java.util.function.Function;
+
+public class FunctionDemo {
+    public static void main(String[] args) {
+
+        Function<Long, Long> adder = value -> value + 3;
+        Long result = adder.apply(1000l);
+        System.out.println("Result :" + result);
+        //Function composition : Higher Order function : looks like decorator pattern in java
+        //on existing function new functons
+        //fun1.compose(fun2) => func3
+        Function<Integer, Integer> multiply = value -> {
+            System.out.println("Multiply function called");
+            return value * 2;
+        };
+        Function<Integer, Integer> add = value -> {
+            System.out.println("Add function is called!");
+            return value + 3;
+        };
+        //compose theses functions : right to left decoration
+        Function<Integer, Integer> func = multiply.compose(add);
+        System.out.println(func.apply(3));
+        //compose theses functions : left to right  decoration
+        Function<Integer, Integer> func1 = multiply.andThen(add);
+        System.out.println(func1.apply(3));
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+Real Implementation of functional programming in java:
+
+ Java Streams : functional style data processing.
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+Principles of functional programming:
+
+1.pure functions and immutablity
+    ->State mutation consistency in concurrent env.
+    ->We can avoid thread evils
+    ->We track state.
+
+The Person who started a project called "Java Lang",due to copy right vilation, the Project
+Renamed "VaVr"
+
+VaVr : 
+
+ is functional library for java8+ that provides Persistent data types and functional
+ control structures.
+
+Functional Data Structure:
+..........................
+
+ old java data structures are object oriented
+ but which promotes "functional-style".
+
+Vavr leverages lambdas to create various new features on functional patterns.
+Vavr main objective is to replace existing Collection framework.
+
+Features of VaVr Collection:
+...........................
+1.pure function && immutablity
+  pure never modifies state on object , rather creates new object and modifes.
+
+in vavr all collections are pure.
+
+Java Immutable ds:
+
+   List<String> list = Arrays.asList("hello");
+        List<String> newList = Collections.unmodifiableList(list);
+
+        //try to add new element on new list
+        newList.add("Hai");
+
+Exception in thread "main" java.lang.UnsupportedOperationException
+	at java.util.Collections$UnmodifiableCollection.add(Collections.java:1055)
+	at com.ibm.func.vavr.ImmutableDSJava.main(ImmutableDSJava.java:14)
+
+
+According to immutable data structure means, cant be modified after their creation.
+
+I want to modifiy the list but i need immutablity, : functional pure functions:
+
+Vavr propose an idea : Persistent data Structures:
+...................................................
+
+A persistent data structure does pererve the pervious version of itself when being modified
+and is therefore "effective immutable"
+
+Functional data structure as know "purly functional ds" => these are immutable and persitent.
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+Functional DS implementation:
+
+ LinkedList - create functional immutable,persistent .
+
+
+Vavr Object creation semantic api:
+  of
+ ClassName.of -- will create List
+package com.ibm.func.vavr;
+
+import io.vavr.collection.List;
+import io.vavr.collection.Queue;
+import io.vavr.collection.TreeSet;
+
+import java.util.Arrays;
+
+
+public class PersistentImmutableCollections {
+    public static void main(String[] args) {
+        //Create Linked
+        List<Integer> list1 = List.of(1, 2, 3, 4, 5);
+        System.out.println(list1.hashCode());
+        //list operations : whether list is persistent and pure immutable
+        List<Integer> list2 = list1.tail();
+        System.out.println(list2.hashCode());
+
+        List<Integer> list3 = list2.prepend(6);
+        System.out.println(list3.hashCode());
+
+        //functional
+        System.out.println(List.of(10, 89).tail().prepend(3));
+
+
+        //functional style list processing : stream processing
+        List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+                .filter(num -> num % 2 == 0)
+                .forEach(System.out::println);
+
+        //Remaining Data structure
+        Queue.of();
+        TreeSet.of(12);
+
+        //i want to filter all even numbers and sum of all even of even numbers
+
+        //java 8 stream style
+        int sumResult = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).stream()
+                .filter(num -> num % 2 == 0).reduce((i, j) -> i + j).get();
+
+        System.out.println("Sum using java 8 stream  api " + sumResult);
+
+        //vaVr
+        System.out.println("SUM using Vavr" + List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+                .filter(num -> num % 2 == 0)
+                .sum());
+
+
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////
+
+Functional principles:
+
+1.composition
+2.Curry
+3.Memoization
+4.Lifiting :partial function ; extract a smallportion of existing function.
+
+
+        Function1<Integer, Integer> plusOne = a -> a + 1;
+        Function1<Integer, Integer> multiplyByTwo = a -> a * 2;
+        //upto 8
+        Function1<Integer, Integer> addAndMultiply = multiplyByTwo.compose(plusOne);
+        Function1<Integer, Integer> addAndThen = multiplyByTwo.andThen(plusOne);
+
+        System.out.println(addAndMultiply.apply(2));
+        System.out.println(addAndThen.apply(2));
+
+
+VaVr Values:
+
+1.Option
+2.Try
+3.Lazy
+4.Either
+5.Future
+8.Validation
+
+1.Option:
+   Option is a "monadic" container type which represents a "optional value". instances of
+Option are either "instance of SOME" or "NONE".
+
+map :transformation api ; tranform value from stream / datasource
+
+ map( value--nestedMap)
+
+  nested array
+      [
+         [
+             []
+		
+          ]
+    ]
+  map(map( map () ) => flatMap- convert nested array/options/list into single Map
+
+
+Option valueIs = Option.of("subramanian");
+        Option<String> valueMaybe = valueIs.
+                flatMap(s->Option.of((String)null)).map(s->s.toString() + "default");
+        System.out.println(valueMaybe.isEmpty());
+
+What is Option will do ?
+
+  OPTION will give either
+		SOME VALUE
+		OR
+		NONE
+ if value is there, return some,elese NONE.
+
+ default Args
+    (a =1) 
+
+Try;
+   Like Option but which returns  value or Exception
+
+ Try is used to handle exception in functional style
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+Lifting + Option:
+.................
+
+        //Lifting : extract a function from existing
+        //source function
+        Function2<Integer, Integer, Integer> divide = (a, b) -> a / b;
+
+        Function2<Integer, Integer, Option<Integer>> partial = Function2.lift(divide);
+
+        //NONE
+        Option<Integer> noneResult = partial.apply(10, 0);
+        System.out.println("None Result" + noneResult);
+        System.out.println("None Result" + noneResult.getOrElse(1));
+
+
+        //SOME
+        Option<Integer> someResult = partial.apply(10, 2);
+        System.out.println("Some Result" + someResult.get());
+/////////////////////////////////////////////////////////////////////////////////////////////
+Try:
+
+ Functional Exception
+
+Values instead of exeception
+
+
+Try will throw Success or Failure , it will Either 
+
+Try -->Success / Failure
+
+1.Try.of(()->exceptioncode).getOrElse(other)
+2.Try.of(()->exceptioncode).recover().getorElse()
+3.Try.of(()->exception).recover(Match(x).of(
+   Case($(instanceOfException_1.class,callback)
+)).getorElse();
+
+old style
+
+  void someapi(){
+    try{
+      exception code
+    }
+    catch(e){}
+    catch(e){}
+  }
+
+
+*****************package com.ibm.func.vavr;
+
+import static io.vavr.API.*;
+import static io.vavr.Predicates.instanceOf;
+
+import io.vavr.control.Try;
+
+
+public class TryTest {
+
+    public static void main(String[] args) {
+        TryTest tryTest = new TryTest();
+        tryTest.tryTestBusinessStuff();
+    }
+
+    void tryTestBusinessStuff() {
+        Try<Integer> result = Try.of(this::calculateImportantStuff);
+        System.out.println("result: " + result);
+        //System.out.println(result.get());
+        // System.out.println(result.getOrElse(0));
+        //   result.onFailure(failed-> System.out.println(failed.getMessage()));
+//        Integer fresult = result.recover(BusinessException.class, 0)
+//                .recover(OtherBusinessException.class, 1)
+//                .get();
+//        System.out.println(fresult);
+
+        int newResult = result.recover(x -> Match(x).of(
+                Case($(instanceOf(BusinessException.class)), t -> 80),
+                Case($(instanceOf(OtherBusinessException.class)), t -> 30)
+        )).getOrElse(90);
+        System.out.println(newResult);
+
+
+    }
+
+    private Integer calculateImportantStuff() throws BusinessException, OtherBusinessException {
+        if (1 == 1)
+            throw new BusinessException();
+        if (1 == 2)
+            throw new OtherBusinessException();
+        return 42;
+    }
+
+}
+****************************************************************************************
+
+Reactive Programming:
+
+->It is one of the Programming paradigm to write applications for "data Processing"
+
+Reactive Programming was built on major three design principles:
+
+ -Observer
+ -Iterator                 =>Reactive
+ -functional progromming
+
+
+Observer - single channel - data , error, no complete signal
+
+Reactive --- separate channel,complete
+
+  data---
+  err --
+  comp---
+
+Reactive  = obs + push based iterator  functional style apis(pure/immutable).
+
+
+ReactiveX - X - Extension - language extension
+
+Java provides extension lib : 
+
+ RxJava
+ Project Reactor - Spring -Webflex
+
+RxJava vs Project Reactor - both are same, but has some few differences.
+............................................................................................
+
+RXjava && Project Reactor:
+
+ -How to create stream
+ -How to send signle
+ -How to process data using fp
+ -Up and Downstream
+ -BackPressure
+
+Operators;  api to create,transform,filter,process stream.....
+
+Objects: To Represent
+
+RXjava 
+1>Observable
+2.Subject
+3.Single
+4.Maybe
+5.Flowable
+6.Completable
+etc..
+
+Project Reactor
+
+1.Mono
+2.Flux
+
+Data Source--->Stream----Emit single---Consumer
+
+Stream Creation:
+
+1.from begining - custom streams
+   create operators.
+
+2.from existing data source using operators
+
+
+Up Stream /Source Stream
+
+
+Down Stream
+
+When down stream is slow, but up stream is fast ==> this will create "Back Pressure"
+
+ --Reactive Programs offers to manage that back Pressure.
+
+package com.ibm.functions;
+
+import io.reactivex.Observable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class DataProcessingStreams {
+
+    public static void main(String[] args) {
+        //Data Processing : array ,List : data Souce
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10,561);
+        //feed datasource into stream and start processing : using obser + push + functionalstyle
+        //create Stream from list
+        Observable<Integer> numberStream = Observable.fromIterable(numbers);
+
+        //processing data : i want to return new stream with double of that
+        numberStream
+                .map(x -> x * 3)
+                .filter(e -> e % 2 != 0)
+                .subscribe(System.out::println, System.out::println, () -> {
+                    System.out.println("Stream is completed!");
+                });
+
+    }
+}
+
+Single -->emits only single event
+MayBe --emits some more event.
+
+
+observ -can emit -- three events -data,err,complete
+Single---can emit only one event at the same time
+
+Single,MayBe---Sub Type of Observable
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+Reactive Streams:
+   Streaming with backpressure
+
+
+
+
+  //Flowable === Observable + BackPressure
+        Flowable<Integer> sourcestream = Flowable.range(1, 1000);
+        sourcestream.map(element -> element * 2).subscribe(System.out::println, System.out::println, () -> {
+            System.out.println("Stream is completed!");
+        });
+
+        //Backpressure Strategy :Buffer
+        Flowable<Integer> flowStream = Flowable.create(source->{
+            for(int i=0;i<2000;i++){
+                source.onNext(i);
+            }
+        }, BackpressureStrategy.BUFFER);
+        //Buffers all values until downstream consumes it
+        flowStream.subscribe(System.out::println);
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+Project Reactor:
+
+Project Reactor is inspired from rxjava.
+
+Rxjava has many features outof the box.
+
+-reactive streams spec- backpressure -  in rxjava 2 , solved.
+-non blocking --still rxjava has no ans
+
+reactor = {reactive + nonblocking}
+
+Flux ===Observable--->Flowable - 1...n
+      --BackPressure
+Mono ====> single event + with backpressure
+
+
+  Flux<String> stream = Flux.create(producer -> {
+            producer.next("Subramanian");
+            producer.next("ram");
+            producer.next("raja");
+            producer.next("geetha");
+            producer.complete();
+        });
+        stream.subscribe(System.out::println, System.out::println, () -> {
+            System.out.println("Flux completed");
+        });
+
+        Flux<Integer> intStream = Flux.range(1, 10);
+        intStream.map(item -> item * 3)
+                .filter(e -> e % 2 == 0)
+                .subscribe(System.out::println, System.out::println, () -> {
+                    System.out.println("Flux completed");
+                });
+        Mono.just("One data").subscribe(System.out::println);
+        Mono.empty().subscribe(null, null, () -> System.out.println("Mono Completed"));
+        Mono.error(new Throwable("Err")).subscribe(System.out::println);
+///////////////////////////////////////////////////////////////////////////////////////////
+
+Resilienc4j - History -Why- features
+
+Implementation:
+ Using functional style
+ Using traditional style-annotation driven-dont use
+on
+ Spring-Boot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
