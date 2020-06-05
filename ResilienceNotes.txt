@@ -1450,64 +1450,550 @@ Implementation:
  Using traditional style-annotation driven-dont use
 on
  Spring-Boot
+////////////////////////////////////////////////////////////////////////////////////////////
+
+Reslience4J:
+
+
+Life Before Resilience4J:
+
+Hystrix is a latency and fault tolerance library designed to isolate points of access to remote systems, services and 3rd party libraries, stop cascading failure and enable resilience in complex distributed systems where failure is inevitable.
+
+latency and fault :
+
+ latency   -slow
+ fault     -Error /something went wrong.
+
+Why netflx stop?
+
+ They dont want to measure app performance,fault management using "Preconfigured" through
+settings
+  program settings -
+    source code
+    app config files -properties or yaml files
+
+Titil new techn from netflix , who recommends Resilience4 4J.
+...........................................................................................
+
+Features of  Resilience4 4J
+
+1.Provides two model of programming
+  1.legacy style - Annotation style - OO
+  2.higher-order functions(decoractors) to enchance any functional interface, lambda expression or method reference with falult management apis.
+
+2.It is very light weight when compare to hystrix
+    RE4J has only one direct dependency  - Vavr,
+     vavr has no any external dependcy
+ hys has depedency archaius 
+     - appache common, guava.
+
+3.RES4j programming models
+   -lambda expression
+   -method references
+   -functional interfaces
+   -Vavr apis 
+
+Falut management apis:
+
+1.Circuit Breaker
+2.Bulkhead
+3.Rate Limiter
+4.Retry
+5.TimeLimiter
+
+Fault management is modular:
+
+With Resilience4j you don't have to go all-in, you can pick what you need.
+
+Resilience4j provides several core modules and add-on modules:
+
+core libs
+resilience4j-circuitbreaker: Circuit breaking
+resilience4j-ratelimiter: Rate limiting
+resilience4j-bulkhead: Bulkheading
+resilience4j-retry: Automatic retrying (sync and async)
+resilience4j-cache: Result caching
+resilience4j-timelimiter: Timeout handling
+
+framework abstractions
+
+resilience4j-spring-boot: Spring Boot Starter
+resilience4j-spring-boot2: Spring Boot 2 Starter
+resilience4j-ratpack: Ratpack Starter
+resilience4j-vertx: Vertx Future decorator
+
+Mertics or Fault Management modules
+
+Metrics modules
+resilience4j-micrometer: Micrometer Metrics exporter
+resilience4j-metrics: Dropwizard Metrics exporter
+resilience4j-prometheus: Prometheus Metrics exporter
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+latency && Fault:
+.................
+
+InfraStructure
+
+1.Bare metal box : physcial computer.
+   -low resources - memory,processing speed,HDA access,network.
+   -falult - os crash,db crash-software crashes,corruptions
+
+
+2.virtual 
+   -low resources - memory,processing speed,HDA access,network.
+   -falult - os crash,db crash-software crashes,corruptions
+
+3.Containers -light weight vms
+   -less speed--performances less--- we will start scalling
+
+4.Cloud 
+    
+Software Fault management
+..........................
+
+Software components communicate each other --Object Communications
+
+
+ ComponentA--------tries talk to ComponentB---Dependency(Could be another component,data sources,network resources,filesystem)
+
+Possiblities for CommponentA:
+
+ 1.May get data-Success.
+   but you cant ensure that it is always best use case
+ 2.May get error - Failure
+   Failure may happen - un availability of resources
+
+ 3.May be waiting for long time-Slow of dependencies
+
+What if software fault happens , how to response the caller/client, promptly
+   -"Fault managment libs" like Reslience4J
+ Resiliance : Hard to break.
+
+
+ComponentA------|Fault Management workflow|------- ComponentB---Dependency(Could be another component,data sources,network resources,filesystem)
+
+
+  methodA(){
+    --10ms:greater than 10ms -dont give me data, give me fallback data.
+    <-->methodB
+  }
+  methodB
+ 25ms
+    ---running.........
+
+..........................................................................................
+
+Patterns to implement Fault Management:
+........................................
+
+Bulk Head
+
+CircuitBreaker
+
+Bulk Head :
+
+ A bulkhead is an upright wall within the hull of a ship or within the fuselage of an aeroplane
+
+Bulk Head in software:
+.....................
+
+ In software systems, a bulk head acts pretty much in the way. It is virtual wall that is
+erected between components so that downtime of one component will not affect the component.
+
+In case of ecommerce domain, webshop and customer service ,
+ if customer service is down, then other parts of the system is alive..
+
+Bulk head allows to isolate issues in individual components and prevent them from spreading
+to other applications.
+
+
+Bulk head in silience4J:
+........................
+
+Bulk head : limits concurrent executions, Resources are isloated into pools so that if one
+ fails the others will continue working.
+
+
+Implementation: Resource isolation:
+    a SemaphoreBulkhead which uses Semaphores
+    a FixedThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
+
+
+Programming Steps:
+
+1.Configuration
+2.Create Registry
+3.Create BulkHead
+4.Decorate your call ---->Wrap the call 
+5.TRY it - once execution done, handle it, watch it.
+
+1.Configuration 
+  -basic /default configuration - which can be overriden
+
+BulkHeadConfig config=BuildHeadConfig.custom()
+                      .maxConcurrentCalls(50)
+                      .maxWaitTime(100)
+                      .build();
+
+2.Create Registry/Create BulkHead
+
+ // Create a BulkheadRegistry with a custom global configuration
+   BulkheadRegistry registry = BulkheadRegistry.of(config);
+   // Get or create a Bulkhead from the registry - 
+// bulkhead will be backed by the default config
+Bulkhead bulkheadWithDefaultConfig = registry.bulkhead("name1"
+
+
+   
+
+3.decorate bulkhead with "biz apis"
+CheckedFunction0<String> decoratedSupplier = Bulkhead
+  .decorateCheckedSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
+
+
+4.Handle it.
+
+Try<String> result = Try.of(decoratedSupplier)
+  .map(value -> value + " world'");
+............................................................................................
+
+Steps:
+
+Project--multi module project
+
+
+step 1 :create master project
+step 2 : create two modules
+           -consumer
+           -provider
+
+
+Resilience4J Apis
+
+1.configuration
+2.Registry
+3.Instance
+4.Instance can have events
+5.decorators
+6.executions
+
+Client-----consumer(8080)-----provider(8081)
+
+http://localhost:8080/
+
+Bulkhead :
+
+ To test load:concurrency test
+ how many users(concurrently) can access, my services
+
+Bulkhead feature is implemented to control the concurrent request handling of actions.
+
+Properties:
+maxConcurrentCalls
+ :Maximum concurrent executions.
+maxWaitDuration
+Max amount of time a thread should be blocked for when attempting to enter a saturated bulkhead.
+ 
+
+ab -n 100 -c 2 http://localhost:8080/bulkhead ------>hits /slow :
+
+ -Bulk--stop allowing conncurrent calls : 2
+
+Each request is a single thread
+
+
+  private final Bulkhead bulkhead =createBulkHead();
+
+ private Bulkhead createBulkHead(int maxConcurrent) {
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom().maxConcurrentCalls(maxConcurrent).build();
+        Bulkhead bulkhead = Bulkhead.of("resilience-provider", bulkheadConfig);
+
+        bulkhead.getEventPublisher()
+                .onCallPermitted(event -> LOGGER.info("Call permitted by bulkhead"))
+                .onCallRejected(event -> LOGGER.info("Call rejected by bulkhead"));
+        return bulkhead;
+    }
+
+//wrap someCall inside Bulkhead
+
+  CheckedFunction0<String> someServiceCall = Bulkhead.decorateCheckedSupplier(bulkhead,
+                () -> "The message was " + restTemplate.getForObject(providerUri + "/slow", String.class));
+
+Try.of(someServiceCall) --->|---SUCCESS ---result.get()
+			     ---FAILURE ----?rec(ex,"")
+                                            onFailure
+					    .getorElse
+
+String result = Try.of(someServiceCall)
+                .map(value -> value + "This is extra ").getOrElse("Failed.......");
+        System.out.println(result);
+        return result;
+
+******************************************************************************************
+
+CircuitBreaker :
+
+closed----open=>10 failure calls
+call 1-------f balance 9
+ 2                     8
+ 3-------------------
+ 4.....................
+
+Res4j maintains interally one ds : RingBitBuffer-circular array
+success -0
+failure-1
+
+Failur rate is - 50%------>
+
+
+What can be considered failure?
+ All Exceptions can be considered failure by default.
+
+Biz exception may not be considered failure....dont open circuit.
+
+slow call : make end user / other systems slow down ; fail fast --->send cached results
+
+
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+  .failureRateThreshold(50)
+  .slowCallRateThreshold(50)
+  .waitDurationInOpenState(Duration.ofMillis(1000))
+  .slowCallDurationThreshold(Duration.ofSeconds(2))
+  .permittedNumberOfCallsInHalfOpenState(3)
+  .minimumNumberOfCalls(10)
+  .slidingWindowType(SlidingWindowType.TIME_BASED)
+  .slidingWindowSize(5)
+  .recordException(e -> INTERNAL_SERVER_ERROR
+                 .equals(getResponse().getStatus()))
+  .recordExceptions(IOException.class, TimeoutException.class)
+  .ignoreExceptions(BusinessException.class, OtherBusinessException.class)
+  .build()
+
+CircuitBreakerRegistry circuitBreakerRegistry = 
+  CircuitBreakerRegistry.of(circuitBreakerConfig);
+
+// Get or create a CircuitBreaker from the CircuitBreakerRegistry 
+// with the global default configuration
+CircuitBreaker circuitBreakerWithDefaultConfig = 
+  circuitBreakerRegistry.circuitBreaker("name1");
+
+//call wrapping
 
 
 
+package io.pivotal.lars.friday.resilience.resilienceconsumer;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.vavr.CheckedRunnable;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.vavr.CheckedFunction0;
+import io.vavr.control.Try;
+
+/**
+ * ConsumerController
+ */
+class BackEndService {
+    public String doSomething() {
+        System.out.println("Hitting services");
+        return "Do Something" + Math.random();
+    }
+}
+
+@RestController
+public class ConsumerController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerController.class);
+    private final RestTemplate restTemplate;
+    private final String providerUri;
+    private final Bulkhead bulkhead;
+    private final CircuitBreaker circuitBreaker;
+    private BackEndService backEndService = new BackEndService();
+    private final RateLimiter rateLimiter;
+
+    public ConsumerController(RestTemplate restTemplate, @Value("${provider.uri}") String providerUri,
+                              @Value("${maxConcurrent}") int maxConcurrent) {
+        this.restTemplate = restTemplate;
+        this.providerUri = providerUri;
+        this.bulkhead = createBulkHead(maxConcurrent);
+        this.circuitBreaker = createCircuitBreaker();
+        this.rateLimiter = createRateLimiter();
 
 
+    }
+
+    private RateLimiter createRateLimiter() {
+        RateLimiterConfig config = RateLimiterConfig.custom()
+                .limitRefreshPeriod(Duration.ofMillis(10000))
+                .limitForPeriod(50)
+                .timeoutDuration(Duration.ofMillis(5))
+                .build();
+// Create registry
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(config);
+
+        rateLimiterRegistry.getEventPublisher()
+                .onEntryAdded(entryAddedEvent -> {
+                    RateLimiter addedRateLimiter = entryAddedEvent.getAddedEntry();
+                    LOGGER.info("RateLimiter {} added", addedRateLimiter.getName());
+                })
+                .onEntryRemoved(entryRemovedEvent -> {
+                    RateLimiter removedRateLimiter = entryRemovedEvent.getRemovedEntry();
+                    LOGGER.info("RateLimiter {} removed", removedRateLimiter.getName());
+                });
+
+// Use registry
+        RateLimiter rateLimiterWithDefaultConfig = rateLimiterRegistry
+                .rateLimiter("name1");
+        return rateLimiterWithDefaultConfig;
+    }
+
+    //bulk head configuration
+    private Bulkhead createBulkHead(int maxConcurrent) {
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom().maxConcurrentCalls(maxConcurrent).build();
+        Bulkhead bulkhead = Bulkhead.of("resilience-provider", bulkheadConfig);
+        bulkhead.getEventPublisher()
+                .onCallPermitted(event -> LOGGER.info("Call permitted by bulkhead"))
+                .onCallRejected(event -> LOGGER.info("Call rejected by bulkhead"))
+                .onCallFinished(event -> LOGGER.info("Call Finished by bulkhead"));
+
+        return bulkhead;
+    }
+
+    private CircuitBreaker createCircuitBreaker() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(50)
+                .waitDurationInOpenState(Duration.ofMillis(20000)).build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("resilience-provider", circuitBreakerConfig);
+
+        circuitBreaker.getEventPublisher().onSuccess(event -> LOGGER.info("Call success via circuit breaker"))
+                .onCallNotPermitted(event -> LOGGER.info("Call denied by circuit breaker"))
+                .onError(event -> LOGGER.info("Call failed via circuit breaker"));
+        return circuitBreaker;
+    }
+
+    @GetMapping()
+    public String okay() {
+        return "The message was " + restTemplate.getForObject(providerUri, String.class);
+    }
+
+    @GetMapping("/bulkhead")
+    public String bulkhead() {
+        CheckedFunction0<String> someServiceCall = Bulkhead.decorateCheckedSupplier(bulkhead,
+                () -> "The message was " + restTemplate.getForObject(providerUri + "/slow", String.class));
+
+//        Try<String> result = Try.of(someServiceCall).recover((throwable) -> "This is a bulkhead fallback");
+//        return result.get();
+        // and chain an other function with map
+        String result = Try.of(someServiceCall)
+                .map(value -> value + "This is extra ").getOrElse("Failed.......");
+        System.out.println(result);
+        return result;
+    }
+
+    @GetMapping("/ratelimiter")
+    public String rateLimiting() {
+        Supplier<String> supplier = RateLimiter.decorateSupplier(rateLimiter, backEndService::doSomething);
+        Try<String> res = Try.ofSupplier(supplier);
+        return res.get();
 
 
+    }
+
+    @GetMapping("/circuitbreaker")
+    public String circuitBreakerFail(@RequestParam boolean shouldFail) {
+        if (shouldFail) {
+            return callServiceViaCircuitBreaker("/error");
+        } else {
+            return callServiceViaCircuitBreaker("/");
+        }
+    }
+
+    private String callServiceViaCircuitBreaker(String uri) {
+        CheckedFunction0<String> someServiceCall = CircuitBreaker.decorateCheckedSupplier(circuitBreaker,
+                () -> "The message was " + restTemplate.getForObject(providerUri + uri, String.class));
+        Try<String> result = Try.of(someServiceCall).recover((throwable) -> "This is a circuit breaker fallback");
+        return result.get();
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+RateLimiter,TimeLimiter ,Annotations style,Reactive Implementation,docker,doc-,mertics:
+......................................................................................
+
+RateLimiter:
+
+ Limit the number of calls to a certain service : extension of Bulk head
+ Spreads out the out load over time.
+
+ Use case;
+ Protect your self from flooding
+ dont DDOS from your partners.
+
+config:
+  limitforPeriod (howmany calls) - 5 calls
+  limitRefereshPeriod(within which time window) within 5 ms
+  timeoutDuration (how long to wait for permission)
 
 
+Retry:
+
+ Retry service call on Exception or Result falsy : Extended from CircuitBreaker
+
+ CB VS Retry && CB + Retry
+
+  if exception---cb trips---Select fallback : this happens instantly : fail fast
+  
+  if exception ----Retry --- maxattempts , with intervals - random,exponetional
+         ->First try after 2000ms
+         ->Consustive try 1000ms
+          -->try for 5 times
+			within which , not ready, respond with proper fallbacks
+  
+ 
+
+Timit Limiter
 
 
+Limit the of calls to a certain service within particular limt : extension of Bulk head
+   5ms - even 1 millions request
 
+******************************************************************************************
 
+Spring 2 intergation vs Spring-cloud Integration:
+................................................
 
+Spring-cloud provides various falult management plugins underneeth - ONE of the Resilience4J.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*********************************************************************************************
+Conculsion:
+ -java fp
+ -vavr
+ -Resilence4J
+********************************************************************************************   			  
 
 
 

@@ -1,159 +1,64 @@
 package com.ibm.res;
 
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.reactivex.Observable;
-import io.vavr.control.Try;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpServerErrorException;
+import com.ibm.func.vavr.BusinessException;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 
+import java.time.Duration;
 
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
-//Exception class
-class BusinessException extends RuntimeException {
-
-    public BusinessException(String message) {
-        super(message);
+class BusineesException extends RuntimeException {
+    public BusineesException(String message) {
+        super();
     }
 }
 
-//Datasource
+class MessageService {
+    private static final int WAIT_TIME_MS = 1000;
 
-interface Connector {
-    String failure();
-
-    String success();
-
-    String ignoreException();
-
-    Observable<String> methodWhichReturnsAStream();
-}
-
-@Component(value = "backendBConnector")
-class BackendBConnector implements Connector {
-
-    @Override
-    public String failure() {
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "This is a remote exception");
+    public String okay() {
+        return "I'm okay.";
     }
 
-    @Override
-    public String success() {
-        return "Hello World from backend B";
+    public String slow() throws InterruptedException {
+        Thread.sleep(WAIT_TIME_MS);
+
+        return "I'm okay, just slow";
     }
 
-    @Override
-    public String ignoreException() {
-        throw new BusinessException("This exception is ignored by the CircuitBreaker of backend B");
-    }
-
-    @Override
-    public Observable<String> methodWhichReturnsAStream() {
-        return Observable.never();
-    }
-}
-
-//Service interface
-interface BusinessService {
-    String failure();
-
-    String success();
-
-    String ignore();
-
-    Try<String> methodWithRecovery();
-}
-//Service implementation
-@Service(value = "businessBService")
-class BusinessServiceB implements BusinessService {
-
-    private final Connector backendBConnector;
-    private  CircuitBreakerRegistry circuitBreakerRegistry= CircuitBreakerRegistry.ofDefaults();
-
-
-    public BusinessServiceB(@Qualifier("backendBConnector") Connector backendBConnector,
-                            CircuitBreakerRegistry circuitBreakerRegistry) {
-        this.backendBConnector = backendBConnector;
-    }
-
-    @Override
-    public String failure() {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        return CircuitBreaker.decorateSupplier(circuitBreaker, backendBConnector::failure).get();
-    }
-
-    @Override
-    public String success() {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        return CircuitBreaker.decorateSupplier(circuitBreaker, backendBConnector::success).get();
-    }
-
-    @Override
-    public String ignore() {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        return CircuitBreaker.decorateSupplier(circuitBreaker, backendBConnector::ignoreException).get();
-    }
-
-    @Override
-    public Try<String> methodWithRecovery() {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        Supplier<String> backendFunction = CircuitBreaker.decorateSupplier(circuitBreaker, () -> backendBConnector.failure());
-        return Try.ofSupplier(backendFunction)
-                .recover((throwable) -> recovery(throwable));
-    }
-    private String recovery(Throwable throwable) {
-        // Handle exception and invoke fallback
-        return "Hello world from recovery";
+    public String error() {
+        throw new BusineesException("I'm definitely not okay!");
     }
 
 }
-@RestController
-@RequestMapping(value = "/backendB")
-class BackendBController {
 
-    @Autowired
-    private BusinessService businessBService;
-    public BackendBController(){
-        this.businessBService = businessBService;
+class Consumer {
+    private final Bulkhead bulkhead;
+    private MessageService messageService;
 
+    public Consumer() {
+        messageService = new MessageService();
+        bulkhead = createBulkHead(100);
     }
 
-    public BackendBController(@Qualifier("businessBService")BusinessService businessBService){
-        this.businessBService = businessBService;
+    private Bulkhead createBulkHead(int maxConncurrent) {
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom()
+                .maxConcurrentCalls(maxConncurrent)
+                .maxWaitDuration(Duration.ofMillis(500))
+                .build();
+        Bulkhead bulkhead = Bulkhead.of("resilience-provider", bulkheadConfig);
+        bulkhead.getEventPublisher()
+                .onCallFinished(f -> System.out.println("Call finished"))
+                .onCallPermitted(p -> System.out.println("CallPermitted"))
+                .onCallRejected(r -> System.out.println("Call Rejected"));
+        return bulkhead;
     }
 
-    @GetMapping("failure")
-    public String backendBFailure(){
-        return businessBService.failure();
+    public String bulkHeadTest()  {
+
+        Bulkhead.decorateSupplier(bulkhead, () -> "The message was"+ messageService.slow(),  String.class);
+        return "";
     }
 
-    @GetMapping("success")
-    public String backendBSuccess(){
-        return businessBService.success();
-    }
 
-    @GetMapping("ignore")
-    public String ignore(){
-        return businessBService.ignore();
-    }
-}
-
-@SpringBootApplication
-class CircuitBreakerDemo {
-    public static void main(String[] args) {
-        SpringApplication.run(CircuitBreakerDemo.class, args);
-
-    }
 }
